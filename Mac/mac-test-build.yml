@@ -1,0 +1,66 @@
+name: Mac test build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mac-release-smoke-test:
+    runs-on: macos-14
+    env:
+      MIX_ENV: prod
+      PHX_SERVER: "true"
+      PORT: "8945"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.2.4"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Mac tools
+        run: |
+          brew install yarn deno ffmpeg yt-dlp
+          yarn --version
+          deno --version
+          ffmpeg -version | head -1
+          yt-dlp --version
+      - name: Build Pinchflat release
+        working-directory: Source
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get --only prod
+          mix deps.compile
+          yarn --cwd assets install
+          mix assets.deploy
+          mix compile
+          mix release
+      - name: Smoke test release
+        working-directory: Source
+        run: |
+          export SECRET_KEY_BASE=$(openssl rand -base64 48)
+          export CONFIG_PATH="$RUNNER_TEMP/pinchflat-config"
+          export MEDIA_PATH="$RUNNER_TEMP/pinchflat-downloads"
+          export DATABASE_PATH="$CONFIG_PATH/db/pinchflat.db"
+          export LOG_PATH="$CONFIG_PATH/logs/pinchflat.log"
+          mkdir -p "$CONFIG_PATH/db" "$CONFIG_PATH/logs" "$MEDIA_PATH"
+          _build/prod/rel/pinchflat/bin/pinchflat eval Pinchflat.Release.migrate
+          _build/prod/rel/pinchflat/bin/pinchflat start &
+          echo $! > /tmp/pinchflat.pid
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://localhost:8945/healthcheck; then
+              echo "healthcheck passed"
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent http://localhost:8945/healthcheck
+          kill $(cat /tmp/pinchflat.pid) || true
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinchflat-mac-release
+          path: Source/_build/prod/rel/pinchflat
+          if-no-files-found: error
