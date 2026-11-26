@@ -9,7 +9,7 @@
 
 ## Mac first test, step by step
 
-1. GitHub Actions, macos-14, Apple Silicon, manual trigger only.
+1. GitHub Actions, macos-14, Apple Silicon, manual trigger only. The workflow file is Mac/mac-test-build.yml in this repo. Copy it to .github/workflows/mac-test-build.yml in the GitHub web UI to run it. I cannot push it to .github/workflows with the GitHub token I use: both the contents API and the git trees API return 404 for .github paths only, while normal paths like Mac succeed, so the token lacks workflow scope.
 2. Install Elixir 1.18.4 and OTP 27.2.4 with erlef/setup-beam. Install Node 20 and yarn. Install Deno, ffmpeg, and yt-dlp with Homebrew.
 3. In Source, run mix local.hex --force, mix local.rebar --force, mix deps.get --only prod, mix deps.compile, yarn install in assets, mix assets.deploy, mix compile, then MIX_ENV=prod mix release.
 4. For the test only, set CONFIG_PATH and MEDIA_PATH under the runner temp dir, generate a SECRET_KEY_BASE, set PHX_SERVER=true and PORT=8945, run bin/pinchflat eval Pinchflat.Release.migrate, then start bin/pinchflat start in the background.
