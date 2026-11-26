@@ -30,7 +30,7 @@ First route: ex_tauri plus Burrito. Tauri gives the native window. The Phoenix a
 
 Fallback: elixir-desktop, with mix desktop.installer for a .dmg and .app bundle.
 
-Simpler smoke test first: GitHub Actions builds a plain Mac release with mix release, starts it, and curls localhost:8945/healthcheck. That proves Pinchflat runs natively on Mac before we add the Tauri window. See BUILD-PLAN.md and the workflow in .github/workflows/mac-test-build.yml at the repo root.
+Simpler smoke test first: GitHub Actions builds a plain Mac release with mix release, starts it, and curls localhost:8945/healthcheck. That proves Pinchflat runs natively on Mac before we add the Tauri window. See BUILD-PLAN.md and the workflow file Mac/mac-test-build.yml. That file lives in Mac because the GitHub token I use cannot write .github/workflows files, so it has to be copied to .github/workflows by hand in the GitHub web UI before it can run.
 
 ## Status
 
